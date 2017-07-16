@@ -579,7 +579,7 @@ h6 {
     padding: 10px;
     font-family: Athelas, Times, "Times New Roman", serif;
     border-radius: 5px;
-    background: rgba(191, 226, 243, 0.6);
+    background: rgba(234, 245, 251, 0.6);
     box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.125);
     word-wrap: break-word;
     box-sizing: border-box;
@@ -663,16 +663,16 @@ h6 {
       box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.125); }
       .post .post-content > table th, .post .post-content > table td {
         padding: 5px 15px;
-        border: 1px double #b2dcf1; }
+        border: 1px double #ddeff9; }
     .post .post-content code, .post .post-content pre {
       padding: 7px;
       font-size: 13px;
       font-family: Consolas, Monaco, Menlo, Consolas, monospace;
-      background: #bfe2f3; }
+      background: rgba(234, 245, 251, 0.6); }
     .post .post-content code {
       padding: 3px 5px;
       border-radius: 4px;
-      color: #c7254e; }
+      color: #54b2de; }
     .post .post-content .highlight {
       margin: 1em 0;
       border-radius: 5px;
@@ -690,7 +690,7 @@ h6 {
           font-size: 13px;
           font-weight: bold;
           color: #b1b1b1;
-          background: #b2dcf1;
+          background: rgba(221, 239, 249, 0.6);
           content: 'Code'; }
       .post .post-content .highlight.html > table::after {
         content: "HTML"; }
@@ -826,7 +826,7 @@ h6 {
         font-size: 13px;
         font-weight: bold;
         color: #b1b1b1;
-        background: #b2dcf1;
+        background: rgba(221, 239, 249, 0.6);
         z-index: 20;
         overflow-x: hidden;
         box-sizing: border-box; }
@@ -1356,16 +1356,16 @@ h6 {
       animation-name: outlast; }
 
 .mobile-menu {
-  background-color: rgba(191, 226, 243, 0.5); }
+  background-color: rgba(234, 245, 251, 0.5); }
   .mobile-menu .mobile-menu-list {
     position: relative;
     list-style: none;
     margin-top: 50px;
     padding: 0;
-    border-top: 1px solid #bfe2f3; }
+    border-top: 1px solid #eaf5fb; }
     .mobile-menu .mobile-menu-list .mobile-menu-item {
       padding: 10px 30px;
-      border-bottom: 1px solid #bfe2f3; }
+      border-bottom: 1px solid #eaf5fb; }
     .mobile-menu .mobile-menu-list a {
       font-size: 18px;
       font-family: Athelas, Times, "Times New Roman", serif; }
