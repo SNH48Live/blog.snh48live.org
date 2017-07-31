@@ -894,6 +894,10 @@ h6 {
       font-family: Athelas, Times, "Times New Roman", serif; }
       .post .post-content .read-more .read-more-link:hover {
         border-bottom: 1px solid #54b2de; }
+    .post .post-content .footnotes {
+      font-size: 80%; }
+      .post .post-content .footnotes ol {
+        padding-left: 1em; }
   .post .post-copyright {
     margin-top: 20px;
     padding-top: 10px;
