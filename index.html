@@ -126,7 +126,7 @@
           <a class="menu-item-link" href="/archives/">
             
             
-              Archives
+              归档
             
           </a>
         </li>
@@ -161,6 +161,80 @@
           <div id="content" class="content">
             
   <section id="posts" class="posts">
+    
+      
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/2017/07/30/记一次失败的转播/">记一次失败的转播</a>
+        
+      </h1>
+
+      <div class="post-meta">
+        <span class="post-time">
+          Jul 30, 2017
+        </span>
+      </div>
+    </header>
+
+    
+    
+
+    <div class="post-content">
+      
+        
+        
+
+        
+          <p>众所周知我推莫寒。关于结果并没有什么可说的；江东子弟多才俊，卷土重来未可知，聊以自慰。不论成绩如何，S队还是S队，莫寒还是莫寒，八月五日依旧会开开心心地看公演。</p>
+<p>这篇博文我只想记录我转播总选时的一些教训，以供将来借鉴。进入技术话题，切换至英文模式。</p>
+<hr>
+<p>So, yesterday I streamed the official YouTube broadcast onto my very own livestream. The motivation was to have a readily available backup VOD immediately after the event, in case the official channel did anything stupid to their version. Turns out this went horribly wrong. The official channel didn’t do anything stupid to their archived stream, and the last four hours were immediately available after the broadcast; some hours later, processing on the <a href="https://www.youtube.com/watch?v=0juOdNXHU6g" target="_blank" rel="external">complete 7:16:03 version</a> was done and made fully available. Meanwhile, my archive is still being processed after 24 hours, and only the last 1:35:01 is available at the moment; the total length shown in Video Manager also dropped from ~7:17 to 5:50:31 for whatever reason. (As for why mine is still being processed, I suppose YouTube priotizes popular streams.) In short, my backup was unnecessary and a disaster.</p>
+<p>But my livestream went further than a backup. I didn’t expect to hit the top in Search, which attracted 5–10% of the total viewership. My stream peaked at ~400 concurrent viewers, compared to maybe ~6000 (or ~8000?) on the official stream. Also, the chatroom was sort of overtaken by Vietnamese fans — unfortunately I didn’t have the slightest clue of what they were talking about; I guess someone shared a link to my stream among them? Anyway, despite my effort to move people over to the official stream, especially after my stream started falling apart (which will be discussed in detail later), some people still stayed and I ended up with &gt;100 at the lowest point.</p>
+<p>Time to put on technical gear. Duplicating a YouTube stream is trivial with FFmpeg. A basic one-liner is</p>
+<figure class="highlight zsh"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ffmpeg -re -i <span class="string">"<span class="variable">$(youtube-dl -f 96 https://www.youtube.com/user/ChinaSNH48/live)</span>"</span> -bsf:a aac_adtstoasc -c copy -f flv rtmp://a.rtmp.youtube.com/live2/xxxx-xxxx-xxxx-xxxx</div></pre></td></tr></table></figure>
+<p>where 96 is the format code for 1080p HLS, and <code>xxxx-xxxx-xxxx-xxxx</code> is the secret key available from either the <a href="https://www.youtube.com/live_dashboard" target="_blank" rel="external">Live Dashboard</a> or ingestion settings for an event with its separate stream.</p>
+<p>Realistically, though, I needed to keep a local copy, and I was prepared to restart the job as quickly as possible in case the process died or had to be killed for whatever reason, so here’s the script I used in production:</p>
+<figure class="highlight zsh"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#!/usr/bin/env zsh</span></div><div class="line"></div><div class="line"><span class="comment"># Source</span></div><div class="line">channel=https://www.youtube.com/user/ChinaSNH48/live</div><div class="line">format=96  <span class="comment"># 1080p HLS stream</span></div><div class="line"></div><div class="line"><span class="comment"># Destination</span></div><div class="line">endpoint=rtmp://a.rtmp.youtube.com/live2</div><div class="line">key=xxxx-xxxx-xxxx-xxxx  <span class="comment"># Actual key redacted</span></div><div class="line"></div><div class="line">title=<span class="string">'20170729 “我心翱翔”SNH48 Group第四届偶像年度人气总决选演唱会'</span></div><div class="line"></div><div class="line"><span class="comment"># Fetch stream URL</span></div><div class="line">urlfile=/tmp/stream_url  <span class="comment"># Persist stream URL in between sessions, in case the script needs to be restarted</span></div><div class="line">poll_interval=10  <span class="comment"># Interval for polling the live stream when waiting for the stream to begin</span></div><div class="line">stream=</div><div class="line"><span class="keyword">while</span> [[ -z <span class="variable">$stream</span> ]]; <span class="keyword">do</span></div><div class="line">  <span class="keyword">if</span> [[ -f <span class="variable">$urlfile</span> ]]; <span class="keyword">then</span></div><div class="line">      stream=<span class="string">"<span class="variable">$(&lt;$urlfile)</span>"</span></div><div class="line">      [[ -z <span class="variable">$stream</span> ]] &amp;&amp; rm <span class="variable">$urlfile</span></div><div class="line">  <span class="keyword">else</span></div><div class="line">      stream=<span class="string">"<span class="variable">$(youtube-dl -g -f $format $channel)</span>"</span></div><div class="line">      [[ -n <span class="variable">$stream</span> ]] &amp;&amp; <span class="built_in">echo</span> -n <span class="variable">$stream</span> &gt;<span class="variable">$urlfile</span> || sleep <span class="variable">$poll_interval</span></div><div class="line">  <span class="keyword">fi</span></div><div class="line"><span class="keyword">done</span></div><div class="line"></div><div class="line"><span class="comment"># Stream to YouTube while keeping a local copy</span></div><div class="line">index=0</div><div class="line"><span class="keyword">while</span> :; <span class="keyword">do</span></div><div class="line">    <span class="comment"># Do not overwrite any saved segment</span></div><div class="line">    <span class="keyword">while</span> :; <span class="keyword">do</span></div><div class="line">        file=<span class="string">"<span class="variable">$title</span> <span class="variable">$index</span>.ts"</span></div><div class="line">        <span class="keyword">if</span> [[ -f <span class="variable">$file</span> ]]; <span class="keyword">then</span></div><div class="line">            (( index++ ))</div><div class="line">        <span class="keyword">else</span></div><div class="line">            <span class="built_in">break</span></div><div class="line">        <span class="keyword">fi</span></div><div class="line">    <span class="keyword">done</span></div><div class="line">    ffmpeg -re -i <span class="variable">$stream</span> -bsf:a aac_adtstoasc -c copy -f flv <span class="variable">$endpoint</span>/<span class="variable">$key</span> -c copy <span class="variable">$file</span></div><div class="line"><span class="keyword">done</span></div></pre></td></tr></table></figure>
+<p>All went well for about five hours.<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup> The latency was below ten seconds. Then the official stream was interrupted for at most a few seconds, and all hell broke loose. The download seems to have picked up just fine, with FFmpeg showing a healthy speed of 1x; I’m not sure if that speed is instantaneous or average — I always thought it’s instantaneous, but when I experienced a similar interruption during the test stream a day earlier (the July 28 warm-up event), the speed gradually climbed from ~0.8x back up to 1x over the course of twenty minutes or so, so the speed may be more complex than just instantaneous, although it doesn’t seem to be a global average as well. I would read the relevant parts of FFmpeg source code if I were really curious. Anyway, whatever that speed means, the RTMP stream simply fell apart. The status on the Live Dashboard begins to cycle through a gray “offline — stream complete”, a red “live — video output low” (technically <a href="https://developers.google.com/youtube/v3/live/docs/liveStreams/health_status_messages" target="_blank" rel="external"><code>videoIngestionStarved</code></a>), and the occasional yellow or green that couldn’t be maintained for more than a couple seconds. Reflected on the served stream, it was buffering all the time. I have no idea why a gap of few seconds could be so disruptive, considering network I/O isn’t remotely at capacity — I would imagine it should be easy to catch up. I would occasionally see a “last message repeated 1 times” message in FFmpeg’s output, but I never saw the actual messages…<sup class="footnote-ref"><a href="#fn2" id="fnref2">[2]</a></sup> Maybe the messages were about dropped segments from M3U8 playlists? If that’s the case, and given I/O shouldn’t be a bottleneck, I would guess it’s <code>-re</code>'s fault. <code>-re</code> is an input option for reading input at native frame rate; it’s necessary for streaming an archived stream (the first thing I tested), but I doubt its necessity when streaming another livestream — after all, the input can only be read at the native framerate, give or take a little. Whether dropping <code>-re</code> would be stability issues is something to investigate, but there’s a non-zero chance this could explain why FFmpeg just couldn’t catch up after the interruption.</p>
+<p>The stream chugged along in the painful cycle for the better part of an hour. Then out of nowhere (segments were still being uploaded normally; I was monitoring my I/O) it got so bad that after three rounds of stopping and buffering the stream did not advance a single bit. I knew it was time to kill the process and accept defeat for my offline recording which was tied to the same process (a restart would apparently cause a short gap in the on-disk version). Somewhat ironically yet predictably, the stream went back to normal immediately. I should have made the hard decision much earlier.</p>
+<p>The drama did not end there. YouTube actually expires their HLS feed URL after six hours. Therefore, after my stream went back to normal and my attention shifted back to the official stream (for the results, apparently), at some point FFmpeg just quitted with 403, and went on to fail in an infinite loop (see my script). The Live Dashboard was on my secondary machine by the side and I was only glancing at it from time to time, so I didn’t notice it until maybe twenty seconds later. I removed the expired <code>/tmp/stream_url</code> and kicked off the script again. In hindsight this seemed inevitable for a 7+ hour livestream,<sup class="footnote-ref"><a href="#fn3" id="fnref3">[3]</a></sup> but at least the gap could have been shortened if (1) I was refreshing the cached stream URL, say, every hour in the background; (2) I stayed vigilant by issuing a notification whenever <code>ffmpeg</code> quits.</p>
+<p>That’s pretty much it. To summarize, here are the lessons I learned:</p>
+<ul>
+<li>The <code>-re</code> flag should probably be dropped (make sure to test the output stability before the next production run);</li>
+<li>Decouple offline recording from streaming for flexibility. My bandwidth is more than enough to handle two simultaneous downloads;<sup class="footnote-ref"><a href="#fn4" id="fnref4">[4]</a></sup></li>
+<li>Be decisive. If the stream can’t keep up, immediately kill and restart the transmission.</li>
+<li>Refresh the cached stream URL every hour in the background so that we don’t scramble to fetch a new URL when the six hour expiration mark is hit;</li>
+<li>Issue a notification with e.g. <code>terminal-notifier</code> whenever <code>ffmpeg</code> quits.</li>
+</ul>
+<p>By the way, as a side effect, the channel’s number of subscribers saw crazy growth on July 29:</p>
+<p><img src="/img/20170731-subscribers-growth.svg" alt="Growth in number of subscribers."></p>
+<p>I’m currently entertaining the idea of livestreaming Theater performances from <a href="http://live.bilibili.com/48" target="_blank" rel="external">live.bilibili.com/48</a> too, in the future. If I want to do that though, I need to make sure it works completely unattended.</p>
+<hr class="footnotes-sep">
+<section class="footnotes">
+<ol class="footnotes-list">
+<li id="fn1" class="footnote-item"><p>Time and durations are all approximate. I did not keep timestamped logs, and have since removed the botched local copy; in addition, analytics for the livestream isn’t available yet. <a href="#fnref1" class="footnote-backref">↩</a></p>
+</li>
+<li id="fn2" class="footnote-item"><p>I suppose either the messages didn’t end in a newline, or there was an output race condition. <a href="#fnref2" class="footnote-backref">↩</a></p>
+</li>
+<li id="fn3" class="footnote-item"><p>I don’t know a way to feed another input URL, unbeknownst to me in the beginning, to a running <code>ffmpeg</code> process. Maybe there’s a way with <code>ffserver</code>? No idea since I never touched <code>ffserver</code>. <a href="#fnref3" class="footnote-backref">↩</a></p>
+</li>
+<li id="fn4" class="footnote-item"><p>There might be a small cost in terms of latency. <a href="#fnref4" class="footnote-backref">↩</a></p>
+</li>
+</ol>
+</section>
+
+        
+      
+    </div>
+
+    
+
+    
+
+  </article>
+
     
       
   <article class="post">
@@ -295,24 +369,46 @@
 </blockquote>
 <p>附演唱部分，翻唱林俊杰、五月天《黑暗骑士》：</p>
 <blockquote>
-<p>黑暗里谁还不睡　黑色的心情和斗篷假面<br>黑夜的黑不是最黑　而在于贪婪找不到底线</p>
-<p>脚下是卑微的街　我孤独站在城市天际线<br>别问我恶类或善类　我只是渴望飞的哺乳类</p>
-<p>善恶的分界　不是对立面<br>而是每个人　那最后纯洁的防线　都逃不过考验</p>
-<p>有没有一种考验　有没有一次淬炼<br>拯救了世界就像　英雄　电影　情节<br>有没有一种信念　有没有一句誓言<br>呼唤黎明的出现　yeah yeah~ yeah yeah~<br>呼唤黎明的出现　yeah yeah~ yeah yeah~<br>呼唤黎明的出现</p>
-<p>越来越大的企业　越来越小的公园<br>越来越深的幻灭　英雄　电影　情节<br>面具下的人是谁　或者说不管是谁　wow~<br>都无法全身而退　yeah yeah~ yeah yeah~<br>都无法全身而退　yeah yeah~ yeah yeah~<br>都无法全身而退</p>
+<p>黑暗里谁还不睡　黑色的心情和斗篷假面<br>
+黑夜的黑不是最黑　而在于贪婪找不到底线</p>
+<p>脚下是卑微的街　我孤独站在城市天际线<br>
+别问我恶类或善类　我只是渴望飞的哺乳类</p>
+<p>善恶的分界　不是对立面<br>
+而是每个人　那最后纯洁的防线　都逃不过考验</p>
+<p>有没有一种考验　有没有一次淬炼<br>
+拯救了世界就像　英雄　电影　情节<br>
+有没有一种信念　有没有一句誓言<br>
+呼唤黎明的出现　yeah yeah~ yeah yeah~<br>
+呼唤黎明的出现　yeah yeah~ yeah yeah~<br>
+呼唤黎明的出现</p>
+<p>越来越大的企业　越来越小的公园<br>
+越来越深的幻灭　英雄　电影　情节<br>
+面具下的人是谁　或者说不管是谁　wow~<br>
+都无法全身而退　yeah yeah~ yeah yeah~<br>
+都无法全身而退　yeah yeah~ yeah yeah~<br>
+都无法全身而退</p>
 <p>（转身，背对观众）</p>
-<p>泪水洗去铅华雨露<br>试图冲击独大局面<br>尚存坚定前进信念<br>你们的光点聚成英雄的支点<sup>＊</sup></p>
+<p>泪水洗去铅华雨露<br>
+试图冲击独大局面<br>
+尚存坚定前进信念<br>
+你们的光点聚成英雄的支点<sup>＊</sup></p>
 <p>（转身，面对观众）</p>
-<p>当我们都走上街　当我们怀抱信念<br>当我们亲身扮演　英雄　电影　情节<br>你就是一种信念　你就是一句誓言　wow~<br>世界正等你出现　yeah yeah~ yeah yeah~<br>世界正等你出现　yeah yeah~ yeah yeah~</p>
-<p>我正在等你出现<br>来拯救我</p>
+<p>当我们都走上街　当我们怀抱信念<br>
+当我们亲身扮演　英雄　电影　情节<br>
+你就是一种信念　你就是一句誓言　wow~<br>
+世界正等你出现　yeah yeah~ yeah yeah~<br>
+世界正等你出现　yeah yeah~ yeah yeah~</p>
+<p>我正在等你出现<br>
+来拯救我</p>
 </blockquote>
 <p><small><sup>＊</sup>这段是莫寒口述的原创部分，有几个词听得不是很清楚，记录可能有误。</small></p>
 <hr>
 <p>莫寒，<a href="http://weibo.com/3053424305/Fc5TGk8xC" target="_blank" rel="external">2017年7月12日23时11分</a>于微博：</p>
 <blockquote>
-<p>我正在等你出现，<br>来拯救我。</p>
+<p>我正在等你出现，<br>
+来拯救我。</p>
 </blockquote>
-<p><img src="/img/20170712-莫寒微博.jpg" alt=""></p>
+<p><img src="/img/20170712-%E8%8E%AB%E5%AF%92%E5%BE%AE%E5%8D%9A.jpg" alt=""></p>
 
         
       
@@ -432,13 +528,13 @@
 
 <div class="copyright">
   <span class="power-by">
-    Powered by <a class="hexo-link" href="https://hexo.io/">Hexo</a>
+    由 <a class="hexo-link" href="https://hexo.io/">Hexo</a> 强力驱动
   </span>
 
   ·
 
   <span class="theme-info">
-    Theme
+    主题
     <a class="theme-link" href="https://github.com/SNH48Live/hexo-theme-even">Even</a>
   </span>
 
