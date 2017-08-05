@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://blog.snh48live.org/"/>
-  <updated>2017-08-01T10:57:04.000Z</updated>
+  <updated>2017-08-05T04:41:14.000Z</updated>
   <id>https://blog.snh48live.org/</id>
   
   <author>
@@ -14,6 +14,26 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Huge fluctuations in subscriber count</title>
+    <link href="https://blog.snh48live.org/2017/08/05/subscribers-fluctuations/"/>
+    <id>https://blog.snh48live.org/2017/08/05/subscribers-fluctuations/</id>
+    <published>2017-08-05T04:36:32.000Z</published>
+    <updated>2017-08-05T04:41:14.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>Over the past few days, the subscriber count on my channel has been fluctuating wildly and inorganically, instantly jumping up and down by up to a hundred. Just look at the plot. Numeric data by minute can be found <a href="https://gist.githubusercontent.com/anonymous/6503edbb2dd22be83376fe2fbfce89fa/raw/09c07732e0c6fd8446d2e69759c4cea00b19e565/subscribers.dat" target="_blank" rel="external">here</a>. What the heck, YouTube?</p>
+<p><img src="/img/20170805-subscribers.svg" alt=""></p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;Over the past few days, the subscriber count on my channel has been fluctuating wildly and inorganically, instantly jumping up and down b
+    
+    </summary>
+    
+    
+  </entry>
   
   <entry>
     <title>目标：整合村内最精华的内容</title>
